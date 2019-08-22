@@ -65,7 +65,9 @@ SWDA：Switchboard Dialogue Act Corpus;
 cd dgu && bash prepare_data_and_model.sh
 ```
 &ensp;&ensp;&ensp;&ensp;数据路径：data/input/data
+
 &ensp;&ensp;&ensp;&ensp;预训练模型路径：data/pretrain_model
+
 &ensp;&ensp;&ensp;&ensp;已训练模型路径：data/saved_models/trained_models
 
 
@@ -118,14 +120,14 @@ task_type: train，predict, evaluate, inference, all, 选择5个参数选项中�
 训练示例： bash run.sh atis_intent train
 ```
 
-&ensp;&ensp;&ensp;&ensp;方式一如果为CPU训练: 
+&ensp;&ensp;&ensp;&ensp;如果为CPU训练: 
 
 ```
 请将run.sh内参数设置为: 
 1、export CUDA_VISIBLE_DEVICES=
 ```
 
-&ensp;&ensp;&ensp;&ensp;方式一如果为GPU训练: 
+&ensp;&ensp;&ensp;&ensp;如果为GPU训练: 
 
 ```
 请将run.sh内参数设置为: 
@@ -200,14 +202,14 @@ task_type: train，predict, evaluate, inference, all, 选择5个参数选项中�
 预测示例： bash run.sh atis_intent predict
 ```
 
-&ensp;&ensp;&ensp;&ensp;方式一如果为CPU预测: 
+&ensp;&ensp;&ensp;&ensp;如果为CPU预测: 
 
 ```
 请将run.sh内参数设置为: 
 1、export CUDA_VISIBLE_DEVICES=
 ```
 
-&ensp;&ensp;&ensp;&ensp;方式一如果为GPU预测: 
+&ensp;&ensp;&ensp;&ensp;如果为GPU预测: 
 
 ```
 请将run.sh内参数设置为: 
@@ -314,14 +316,14 @@ task_type: train，predict, evaluate, inference, all, 选择5个参数选项中�
 保存模型示例： bash run.sh atis_intent inference
 ```
 
-&ensp;&ensp;&ensp;&ensp;方式一如果为CPU执行inference model过程: 
+&ensp;&ensp;&ensp;&ensp;如果为CPU执行inference model过程: 
 
 ```
 请将run.sh内参数设置为: 
 1、export CUDA_VISIBLE_DEVICES=
 ```
 
-&ensp;&ensp;&ensp;&ensp;方式一如果为GPU执行inference model过程:
+&ensp;&ensp;&ensp;&ensp;如果为GPU执行inference model过程:
 
 ```
 请将run.sh内参数设置为: 
@@ -430,11 +432,6 @@ python -u main.py \
 第二版：PaddlePaddle 1.6.0版本
 更新功能：在第一版的基础上，根据PaddlePaddle的模型规范化标准，对模块内训练、预测、评估等代码进行了重构，提高易用性；
 
-## 作者
-
-zhangxiyuan01@baidu.com
-
-zhouxiangyang@baidu.com
 
 ## 如何贡献代码
 
