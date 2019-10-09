@@ -68,7 +68,7 @@ def build_program(is_train, main_prog, startup_prog, args):
             main_prog.random_seed = args.random_seed
             startup_prog.random_seed = args.random_seed
         with fluid.unique_name.guard():
-            py_reader, loss_out = create_model(model, args, is_train)
+            py_reader, loss_out, data_size = create_model(model, args, is_train)
             # add backward op in program
             if is_train:
                 optimizer = create_optimizer(args)
@@ -78,11 +78,14 @@ def build_program(is_train, main_prog, startup_prog, args):
                 global_lr = optimizer._global_learning_rate()
                 global_lr.persistable = True
                 loss_out.append(global_lr)
+                loss_out.append(data_size)
                 if args.use_ema:
                     global_steps = fluid.layers.learning_rate_scheduler._decay_step_counter()
                     ema = ExponentialMovingAverage(args.ema_decay, thres_steps=global_steps)
                     ema.update()
                     loss_out.append(ema)
+            else:
+                loss_out.append(data_size)
             loss_out.append(py_reader)
     return loss_out
 
@@ -90,6 +93,7 @@ def validate(args, test_py_reader, exe, test_prog, test_fetch_list, pass_id, tra
     test_batch_time_record = []
     test_batch_metrics_record = []
     test_batch_id = 0
+    test_data_size = 0
     test_py_reader.start()
     try:
         while True:
@@ -101,7 +105,8 @@ def validate(args, test_py_reader, exe, test_prog, test_fetch_list, pass_id, tra
             test_batch_time_record.append(test_batch_elapse)
 
             test_batch_metrics_avg = np.mean(
-                np.array(test_batch_metrics), axis=1)
+                np.array(test_batch_metrics[:-1]), axis=1)
+            test_data_size += np.sum(test_batch_metrics[-1])
             test_batch_metrics_record.append(test_batch_metrics_avg)
 
             print_info(pass_id, test_batch_id, args.print_step,
@@ -168,15 +173,17 @@ def train(args):
     #init model by checkpoint or pretrianed model.
     init_model(exe, args, train_prog)
 
+    # DROP_LAST change to FALSE 
     train_reader = reader.train(settings=args)
     train_reader = paddle.batch(
         train_reader,
         batch_size=int(args.batch_size / fluid.core.get_cuda_device_count()),
-        drop_last=True)
+        drop_last=False)
 
+    # DROP_LAST change to FALSE
     test_reader = reader.val(settings=args)
     test_reader = paddle.batch(
-        test_reader, batch_size=args.test_batch_size, drop_last=True)
+        test_reader, batch_size=args.test_batch_size, drop_last=False)
 
     train_py_reader.decorate_sample_list_generator(train_reader, place)
     test_py_reader.decorate_sample_list_generator(test_reader, place)
@@ -187,6 +194,7 @@ def train(args):
     for pass_id in range(args.num_epochs):
 
         train_batch_id = 0
+        train_data_size = 0
         train_batch_time_record = []
         train_batch_metrics_record = []
 
@@ -201,7 +209,8 @@ def train(args):
                 train_batch_elapse = t2 - t1
                 train_batch_time_record.append(train_batch_elapse)
                 train_batch_metrics_avg = np.mean(
-                    np.array(train_batch_metrics), axis=1)
+                    np.array(train_batch_metrics[:-1]), axis=1)
+                train_data_size += np.sum(train_batch_metrics[-1])
                 train_batch_metrics_record.append(train_batch_metrics_avg)
 
                 print_info(pass_id, train_batch_id, args.print_step,
@@ -217,6 +226,9 @@ def train(args):
             with ema.apply(exe):
                 validate(args, test_py_reader, exe, test_prog, test_fetch_list, pass_id, train_batch_metrics_record)
             print('ExponentialMovingAverage validate over!')
+
+        # THIS SHOULD MATCHES THE NUMBER OF IMAGES IN DATASET       
+        print('train_data_size: ', train_data_size)
 
         validate(args, test_py_reader, exe, test_prog, test_fetch_list, pass_id, train_batch_metrics_record)
         #For now, save model per epoch.

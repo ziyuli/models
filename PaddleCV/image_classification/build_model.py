@@ -109,6 +109,8 @@ def create_model(model, args, is_train):
     """
     py_reader, data = utility.create_pyreader(is_train, args)
 
+    data_size = fluid.layers.shape(data[0])[0]
+
     if args.model == "GoogLeNet":
         loss_out = _googlenet_model(data, model, args, is_train)
     else:
@@ -116,4 +118,4 @@ def create_model(model, args, is_train):
             loss_out = _mixup_model(data, model, args, is_train)
         else:
             loss_out = _basic_model(data, model, args, is_train)
-    return py_reader, loss_out
+    return py_reader, loss_outa, data_size
